@@ -159,3 +159,21 @@ inline std::vector<Process> makeRandomSet(unsigned seed, int count) {
 
     return procs;
 }
+
+// Сохранение диаграммы Ганта в CSV
+// -1 = IDLE, -2 = переключение контекста
+inline bool saveGanttCsv(const std::string& path,
+                         const SimResult& r) {
+    std::ofstream out(path);
+    if (!out) return false;
+
+    out << "pid,start,end\n";
+
+    for (const auto& g : r.gantt) {
+        out << g.first << ','
+            << g.second.first << ','
+            << g.second.second << '\n';
+    }
+
+    return static_cast<bool>(out);
+}

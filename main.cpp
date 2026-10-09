@@ -454,5 +454,37 @@ int main() {
     printTable("CPU utilization (%)", "cpu");
   }
 
+
+  {
+    std::cout << "\n=== Task 9: Gantt PNG ===\n";
+
+    auto set = makeTestSet();
+
+    RrScheduler rr(set, 2);
+    MlfqScheduler mlfq(set);
+    RrScheduler rrCs(set, 2);
+
+    bool ok = true;
+
+    ok = saveGanttCsv(
+        "results/gantt_rr2.csv",
+        runSimulation(rr)) && ok;
+
+    ok = saveGanttCsv(
+        "results/gantt_mlfq.csv",
+        runSimulation(mlfq)) && ok;
+
+    ok = saveGanttCsv(
+        "results/gantt_rr2_cs.csv",
+        runSimulation(rrCs, 100000, 1)) && ok;
+
+    if (!ok) {
+      std::cerr << "Failed to save Gantt CSV\n";
+      return 1;
+    }
+
+    std::cout << "Gantt CSV files saved successfully\n";
+  }
+
   return 0;
 }
