@@ -75,6 +75,7 @@ void printGantt(const SimResult& r) {
   for (auto& [pid, span] : r.gantt) {
     std::cout << "  [" << span.first << "-" << span.second << ") ";
     if (pid == -1) std::cout << "IDLE\n";
+    else if (pid == -2) std::cout << "CS\n";
     else std::cout << "P" << pid << "\n";
   }
   std::cout << "\n";
@@ -212,6 +213,44 @@ int main() {
 
     printResult(r2);
     printNamedGantt(r2);
+  }
+
+
+  {
+    std::cout << "\n=== Task 4: Context Switch Overhead ===\n";
+
+    auto set = makeTestSet();
+
+    std::cout << "q    wait0  turn0  wait1  turn1  CPU1%  overhead1%\n";
+
+    for (std::uint64_t q : {1ULL, 2ULL, 4ULL, 8ULL}) {
+      RrScheduler rr0(set, q);
+      RrScheduler rr1(set, q);
+
+      SimResult a = runSimulation(rr0, 100000, 0);
+      SimResult b = runSimulation(rr1, 100000, 1);
+
+      std::cout << std::fixed << std::setprecision(2)
+                << std::setw(5) << q
+                << std::setw(7) << a.avgWaiting
+                << std::setw(7) << a.avgTurnaround
+                << std::setw(7) << b.avgWaiting
+                << std::setw(7) << b.avgTurnaround
+                << std::setw(7) << b.cpuUtilization
+                << std::setw(10) << b.overheadPercent
+                << "\n";
+    }
+
+    std::cout << "\nFCFS, switchCost=1:\n";
+    FcfsScheduler fcfs(set);
+    SimResult f = runSimulation(fcfs, 100000, 1);
+    printResult(f);
+    std::cout << "Overhead: " << f.overheadPercent << "%\n";
+
+    std::cout << "\nGantt RR(q=2), switchCost=1:\n";
+    RrScheduler rr(set, 2);
+    SimResult r = runSimulation(rr, 100000, 1);
+    printGantt(r);
   }
 
   return 0;
