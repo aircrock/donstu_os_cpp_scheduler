@@ -486,5 +486,58 @@ int main() {
     std::cout << "Gantt CSV files saved successfully\n";
   }
 
+
+  {
+    std::cout << "\n=== Task 7: MultiCore ===\n";
+
+    auto set = makeTestSet();
+
+    std::cout << "Algorithm             cores  wait    turn    resp    CPU%   ticks\n";
+
+    for (int cores : {1, 2, 4}) {
+      std::vector<std::unique_ptr<Scheduler>> scheds;
+
+      scheds.push_back(std::make_unique<FcfsScheduler>(set));
+      scheds.push_back(std::make_unique<SjfScheduler>(set));
+      scheds.push_back(std::make_unique<SrtnScheduler>(set));
+      scheds.push_back(
+          std::make_unique<PriorityScheduler>(set, true, false));
+
+      for (auto& sched : scheds) {
+        SimResult r = runSimulationMulti(*sched, cores);
+
+        std::cout << std::left << std::setw(23)
+                  << sched->name()
+                  << std::right << std::setw(4) << cores
+                  << std::fixed << std::setprecision(2)
+                  << std::setw(8) << r.avgWaiting
+                  << std::setw(8) << r.avgTurnaround
+                  << std::setw(8) << r.avgResponse
+                  << std::setw(8) << r.cpuUtilization
+                  << std::setw(8) << r.totalTicks
+                  << "\n";
+      }
+    }
+
+    std::cout << "\nSJF two-core Gantt:\n";
+
+    SjfScheduler sjf(set);
+    SimResult result = runSimulationMulti(sjf, 2);
+
+    for (std::size_t c = 0; c < result.coreGantt.size(); ++c) {
+      std::cout << "Core " << c << ":";
+
+      for (const auto& segment : result.coreGantt[c]) {
+        int pid = segment.first;
+        std::cout << " "
+                  << (pid == -1 ? "IDLE" : "P" + std::to_string(pid))
+                  << "[" << segment.second.first
+                  << "-" << segment.second.second << ")";
+      }
+
+      std::cout << "\n";
+    }
+  }
+
   return 0;
 }
