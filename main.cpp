@@ -1,5 +1,6 @@
 #include "fcfs.h"
 #include "sjf.h"
+#include "hrrn.h"
 #include "srtn.h"
 #include "rr.h"
 #include "priority.h"
@@ -152,6 +153,65 @@ int main() {
     std::cout << "Loaded:\n";
     FcfsScheduler b(loaded);
     printResult(runSimulation(b));
+  }
+
+
+  {
+    std::cout << "\n=== Task 3: HRRN vs SJF ===\n";
+
+    std::vector<Process> set;
+
+    auto add = [&](int pid, const std::string& name,
+                   std::uint64_t arrival,
+                   std::uint64_t burst) {
+      Process p;
+      p.pid = pid;
+      p.name = name;
+      p.arrivalTime = arrival;
+      p.burstTime = burst;
+      p.remainingTime = burst;
+      p.priority = 1;
+      p.dynamicPriority = 1;
+      set.push_back(p);
+    };
+
+    add(1, "A",  0, 4);
+    add(2, "L",  1, 6);
+    add(3, "S1", 4, 2);
+    add(4, "S2", 5, 1);
+
+    auto printNamedGantt = [&](const SimResult& r) {
+      std::cout << "Gantt (" << r.algorithm << "):";
+
+      for (const auto& [pid, span] : r.gantt) {
+        std::string label = "IDLE";
+
+        for (const auto& p : set) {
+          if (p.pid == pid) {
+            label = p.name;
+            break;
+          }
+        }
+
+        std::cout << " " << label
+                  << "[" << span.first
+                  << "-" << span.second << ")";
+      }
+
+      std::cout << "\n";
+    };
+
+    SjfScheduler sjf(set);
+    HrrnScheduler hrrn(set);
+
+    SimResult r1 = runSimulation(sjf);
+    SimResult r2 = runSimulation(hrrn);
+
+    printResult(r1);
+    printNamedGantt(r1);
+
+    printResult(r2);
+    printNamedGantt(r2);
   }
 
   return 0;
