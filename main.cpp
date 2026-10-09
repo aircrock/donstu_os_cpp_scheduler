@@ -127,5 +127,32 @@ int main() {
     printProcessTable(rr.processes());
   }
 
+
+  {
+    std::cout << "\n=== Task 13: Save and Load ===\n";
+
+    auto set = makeTestSet();
+
+    if (!saveSet("sets/set_basic.txt", set)) {
+        std::cerr << "Error saving set\n";
+        return 1;
+    }
+
+    std::vector<Process> loaded;
+
+    if (!loadSet("sets/set_basic.txt", loaded)) {
+        std::cerr << "Error loading set\n";
+        return 1;
+    }
+
+    std::cout << "Original:\n";
+    FcfsScheduler a(set);
+    printResult(runSimulation(a));
+
+    std::cout << "Loaded:\n";
+    FcfsScheduler b(loaded);
+    printResult(runSimulation(b));
+  }
+
   return 0;
 }
