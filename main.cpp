@@ -253,5 +253,34 @@ int main() {
     printGantt(r);
   }
 
+
+  {
+    std::cout << "\n=== Task 5: RR Quantum Analysis ===\n";
+
+    auto set = makeTestSet();
+
+    std::cout << "q  wait   turn   resp   CS   Graph\n";
+
+    const std::uint64_t quantums[] = {1, 2, 4, 8, 16};
+
+    for (auto q : quantums) {
+      RrScheduler rr(set, q);
+      SimResult r = runSimulation(rr);
+
+      std::cout << std::fixed << std::setprecision(2)
+                << std::setw(2) << q << " "
+                << std::setw(6) << r.avgWaiting << " "
+                << std::setw(6) << r.avgTurnaround << " "
+                << std::setw(6) << r.avgResponse << " "
+                << std::setw(4) << r.contextSwitches << " "
+                << std::string(r.contextSwitches, '#')
+                << "\n";
+    }
+
+    std::cout << "\nFCFS comparison:\n";
+    FcfsScheduler fcfs(set);
+    printResult(runSimulation(fcfs));
+  }
+
   return 0;
 }
