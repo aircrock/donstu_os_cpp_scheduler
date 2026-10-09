@@ -59,6 +59,37 @@ std::vector<Process> makeIoTestSet() {
   return procs;
 }
 
+
+std::vector<Process> makeConvoySet() {
+  std::vector<Process> procs;
+
+  auto add = [&](int pid, const std::string& name,
+                 std::uint64_t arrival,
+                 std::uint64_t burst,
+                 int priority,
+                 std::vector<IoBlock> io = {}) {
+    Process p;
+    p.pid = pid;
+    p.name = name;
+    p.arrivalTime = arrival;
+    p.burstTime = burst;
+    p.remainingTime = burst;
+    p.priority = priority;
+    p.dynamicPriority = priority;
+    p.ioBlocks = std::move(io);
+    procs.push_back(p);
+  };
+
+  add(1, "CPU1", 0, 20, 2);
+  add(2, "IO1", 1, 6, 1,
+      {{1, 4}, {2, 4}, {3, 4}, {4, 4}, {5, 4}});
+  add(3, "IO2", 2, 6, 1,
+      {{1, 4}, {2, 4}, {3, 4}, {4, 4}, {5, 4}});
+  add(4, "CPU2", 3, 12, 3);
+
+  return procs;
+}
+
 void printResult(const SimResult& r) {
   std::cout << std::left << std::setw(30) << r.algorithm
             << " | wait=" << std::setw(7) << std::fixed << std::setprecision(2) << r.avgWaiting
@@ -280,6 +311,38 @@ int main() {
     std::cout << "\nFCFS comparison:\n";
     FcfsScheduler fcfs(set);
     printResult(runSimulation(fcfs));
+  }
+
+
+  {
+    std::cout << "\n=== Task 6: Convoy Effect ===\n";
+
+    auto set = makeConvoySet();
+
+    std::vector<std::unique_ptr<Scheduler>> scheds;
+
+    scheds.push_back(
+        std::make_unique<FcfsScheduler>(set));
+    scheds.push_back(
+        std::make_unique<SrtnScheduler>(set));
+    scheds.push_back(
+        std::make_unique<RrScheduler>(set, 4));
+    scheds.push_back(
+        std::make_unique<PriorityScheduler>(set, true, true));
+    scheds.push_back(
+        std::make_unique<MlfqScheduler>(set));
+
+    for (auto& sched : scheds) {
+      SimResult r = runSimulation(*sched);
+
+      std::cout << "\nAlgorithm: " << r.algorithm << "\n";
+      printResult(r);
+      printProcessTable(sched->processes());
+
+      if (r.algorithm == "FCFS") {
+        printGantt(r);
+      }
+    }
   }
 
   return 0;
