@@ -1,0 +1,57 @@
+=== Linux kernel ===
+7.0.0-34-generic
+=== CPUs ===
+4
+=== Scheduling policies ===
+SCHED_OTHER min/max priority	: 0/0
+SCHED_FIFO min/max priority	: 1/99
+SCHED_RR min/max priority	: 1/99
+SCHED_BATCH min/max priority	: 0/0
+SCHED_IDLE min/max priority	: 0/0
+SCHED_DEADLINE min/max priority	: 0/0
+=== Shell scheduling ===
+pid 4895's current scheduling policy: SCHED_OTHER
+pid 4895's current scheduling priority: 0
+pid 4895's current runtime parameter: 2100000
+=== Process priorities ===
+    PID     TID CLS RTPRIO PRI  NI COMMAND
+      1       1  TS      -  19   0 systemd
+      2       2  TS      -  19   0 kthreadd
+      3       3  TS      -  19   0 pool_workqueue_release
+      4       4  TS      -  39 -20 kworker/R-rcu_gp
+      5       5  TS      -  39 -20 kworker/R-sync_wq
+      6       6  TS      -  39 -20 kworker/R-kvfree_rcu_reclaim
+      7       7  TS      -  39 -20 kworker/R-slub_flushwq
+      8       8  TS      -  39 -20 kworker/R-netns
+     10      10  TS      -  39 -20 kworker/0:0H-kblockd
+     13      13  TS      -  39 -20 kworker/R-mm_percpu_wq
+     14      14  TS      -  19   0 ksoftirqd/0
+     15      15  TS      -  19   0 rcu_preempt
+     16      16  TS      -  19   0 rcu_exp_par_gp_kthread_worker/0
+     17      17  TS      -  19   0 rcu_exp_gp_kthread_worker
+     18      18  FF     99 139   - migration/0
+     19      19  TS      -  19   0 kprobe-optimizer
+     20      20  FF     50  90   - idle_inject/0
+     21      21  TS      -  19   0 cpuhp/0
+     22      22  TS      -  19   0 cpuhp/1
+=== Scheduler statistics ===
+head (7304, #threads: 1)
+-------------------------------------------------------------------
+se.exec_start                                :       7924432.745595
+se.vruntime                                  :        648821.991542
+se.sum_exec_runtime                          :             0.000000
+se.nr_migrations                             :                    0
+nr_switches                                  :                    0
+nr_voluntary_switches                        :                    0
+nr_involuntary_switches                      :                    0
+se.load.weight                               :              1048576
+se.avg.load_sum                              :                47723
+se.avg.runnable_sum                          :             24386453
+se.avg.util_sum                              :             24386453
+se.avg.load_avg                              :                 1024
+se.avg.runnable_avg                          :                  511
+se.avg.util_avg                              :                  511
+se.avg.last_update_time                      :        7924432745472
+se.avg.util_est                              :                    0
+uclamp.min                                   :                    0
+uclamp.max                                   :                 1024
