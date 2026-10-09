@@ -345,5 +345,114 @@ int main() {
     }
   }
 
+
+  {
+    std::cout << "\n=== Task 10: Random Sets ===\n";
+
+    const int sizes[5] = {12, 14, 16, 18, 20};
+
+    struct Metrics10 {
+      std::string name;
+      std::vector<double> wait;
+      std::vector<double> turn;
+      std::vector<double> resp;
+      std::vector<double> cpu;
+    };
+
+    std::vector<Metrics10> rows = {
+      {"FCFS", {}, {}, {}, {}},
+      {"SJF", {}, {}, {}, {}},
+      {"SRTN", {}, {}, {}, {}},
+      {"HRRN", {}, {}, {}, {}},
+      {"RR q=4", {}, {}, {}, {}},
+      {"Prio", {}, {}, {}, {}},
+      {"Prio+aging", {}, {}, {}, {}},
+      {"MLFQ", {}, {}, {}, {}}
+    };
+
+    for (unsigned seed = 1; seed <= 5; ++seed) {
+      std::string path =
+          "sets/set" + std::to_string(seed) + ".txt";
+
+      auto generated = makeRandomSet(seed, sizes[seed - 1]);
+
+      if (!saveSet(path, generated)) {
+        std::cerr << "Cannot save: " << path << "\n";
+        return 1;
+      }
+
+      std::vector<Process> set;
+      if (!loadSet(path, set)) {
+        std::cerr << "Cannot load: " << path << "\n";
+        return 1;
+      }
+
+      std::vector<std::unique_ptr<Scheduler>> scheds;
+
+      scheds.push_back(std::make_unique<FcfsScheduler>(set));
+      scheds.push_back(std::make_unique<SjfScheduler>(set));
+      scheds.push_back(std::make_unique<SrtnScheduler>(set));
+      scheds.push_back(std::make_unique<HrrnScheduler>(set));
+      scheds.push_back(std::make_unique<RrScheduler>(set, 4));
+      scheds.push_back(
+          std::make_unique<PriorityScheduler>(set, false, false));
+      scheds.push_back(
+          std::make_unique<PriorityScheduler>(set, true, true));
+      scheds.push_back(std::make_unique<MlfqScheduler>(set));
+
+      for (std::size_t j = 0; j < scheds.size(); ++j) {
+        SimResult r = runSimulation(*scheds[j]);
+
+        rows[j].wait.push_back(r.avgWaiting);
+        rows[j].turn.push_back(r.avgTurnaround);
+        rows[j].resp.push_back(r.avgResponse);
+        rows[j].cpu.push_back(r.cpuUtilization);
+      }
+
+      std::cout << "Saved " << path
+                << " (" << set.size() << " processes)\n";
+    }
+
+    auto printTable = [&](const std::string& title,
+                          const std::string& metric) {
+      std::cout << "\n" << title << "\n";
+      std::cout << std::left << std::setw(14) << "Algorithm"
+                << std::right;
+
+      for (int i = 1; i <= 5; ++i)
+        std::cout << std::setw(9)
+                  << ("set " + std::to_string(i));
+
+      std::cout << std::setw(10) << "average" << "\n";
+
+      for (const auto& row : rows) {
+        const std::vector<double>* values = &row.wait;
+
+        if (metric == "turn") values = &row.turn;
+        if (metric == "resp") values = &row.resp;
+        if (metric == "cpu") values = &row.cpu;
+
+        std::cout << std::left << std::setw(14) << row.name
+                  << std::right << std::fixed
+                  << std::setprecision(2);
+
+        double sum = 0;
+
+        for (double v : *values) {
+          std::cout << std::setw(9) << v;
+          sum += v;
+        }
+
+        std::cout << std::setw(10)
+                  << sum / values->size() << "\n";
+      }
+    };
+
+    printTable("Average waiting time", "wait");
+    printTable("Average turnaround time", "turn");
+    printTable("Average response time", "resp");
+    printTable("CPU utilization (%)", "cpu");
+  }
+
   return 0;
 }
