@@ -2,6 +2,7 @@
 #include "sjf.h"
 #include "hrrn.h"
 #include "srtn.h"
+#include "edf.h"
 #include "rr.h"
 #include "priority.h"
 #include "mlfq.h"
@@ -88,6 +89,53 @@ std::vector<Process> makeConvoySet() {
   add(4, "CPU2", 3, 12, 3);
 
   return procs;
+}
+
+
+std::vector<Process> makeDeadlineSet(bool feasible) {
+  std::vector<Process> v;
+
+  auto add = [&](int pid, const std::string& name,
+                 std::uint64_t arrival,
+                 std::uint64_t burst,
+                 std::uint64_t deadline) {
+    Process p;
+    p.pid = pid;
+    p.name = name;
+    p.arrivalTime = arrival;
+    p.burstTime = burst;
+    p.remainingTime = burst;
+    p.deadline = deadline;
+    p.priority = 1;
+    p.dynamicPriority = 1;
+    v.push_back(p);
+  };
+
+  if (feasible) {
+    add(1, "E1", 0, 3, 7);
+    add(2, "E2", 1, 2, 4);
+    add(3, "E3", 2, 2, 9);
+    add(4, "E4", 4, 3, 10);
+  } else {
+    add(1, "F1", 0, 4, 5);
+    add(2, "F2", 1, 3, 5);
+    add(3, "F3", 2, 2, 6);
+  }
+
+  return v;
+}
+
+void printDeadlines(const std::vector<Process>& procs) {
+  for (const auto& p : procs) {
+    bool ok = p.state == ProcessState::TERMINATED &&
+              p.finishTime <= p.deadline;
+
+    std::cout << p.name
+              << ": finish=" << p.finishTime
+              << " deadline=" << p.deadline
+              << (ok ? " OK" : " MISSED")
+              << "\n";
+  }
 }
 
 void printResult(const SimResult& r) {
@@ -536,6 +584,62 @@ int main() {
       }
 
       std::cout << "\n";
+    }
+  }
+
+
+  {
+    std::cout << "\n=== Task 12: EDF ===\n";
+
+    auto printNamedGantt = [](
+        const SimResult& r,
+        const std::vector<Process>& set) {
+
+      std::cout << "Gantt (" << r.algorithm << "):";
+
+      for (const auto& segment : r.gantt) {
+        int pid = segment.first;
+        std::string name = "IDLE";
+
+        for (const auto& p : set) {
+          if (p.pid == pid) {
+            name = p.name;
+            break;
+          }
+        }
+
+        std::cout << " " << name
+                  << "[" << segment.second.first
+                  << "-" << segment.second.second << ")";
+      }
+
+      std::cout << "\n";
+    };
+
+    for (bool feasible : {true, false}) {
+      auto set = makeDeadlineSet(feasible);
+
+      std::cout << "\nSet "
+                << (feasible ? "E (feasible)" : "F (infeasible)")
+                << "\n";
+
+      EdfScheduler edf(set);
+      SimResult r = runSimulation(edf);
+
+      printResult(r);
+      printNamedGantt(r, set);
+      printDeadlines(edf.processes());
+
+      if (feasible) {
+        std::cout << "\nSRTN on set E:\n";
+
+        SrtnScheduler srtn(set);
+        SimResult s = runSimulation(srtn);
+
+        printResult(s);
+        printNamedGantt(s, set);
+        printDeadlines(srtn.processes());
+      }
     }
   }
 
